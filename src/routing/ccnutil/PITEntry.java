@@ -1,4 +1,3 @@
-/* Pending Interest Table entry. */
 package routing.ccnutil;
 
 import java.util.ArrayList;

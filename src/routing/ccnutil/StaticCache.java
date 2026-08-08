@@ -1,4 +1,3 @@
-/* Permanent Static Cache. */
 package routing.ccnutil;
 
 import java.util.ArrayList;

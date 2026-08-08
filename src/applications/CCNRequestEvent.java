@@ -1,7 +1,3 @@
-/*
- * Request-level event payload used by CCN_application and
- * CCNApplicationReport.
- */
 package applications;
 
 /**

@@ -21,7 +21,6 @@ import core.SimClock;
 import core.SimScenario;
 import core.World;
 import routing.ccnutil.*;
-
 import static util.Constants.*;
 
 /**

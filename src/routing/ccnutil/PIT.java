@@ -1,4 +1,3 @@
-/* HashMap-based Pending Interest Table. */
 package routing.ccnutil;
 
 import java.util.ArrayList;

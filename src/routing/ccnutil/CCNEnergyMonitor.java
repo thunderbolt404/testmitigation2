@@ -1,4 +1,3 @@
-/* Energy and forwarding counters for the CCN-DTN router. */
 package routing.ccnutil;
 
 /** Per-router counters. A report can aggregate these across all hosts. */

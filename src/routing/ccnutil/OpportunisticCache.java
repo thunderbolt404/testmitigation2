@@ -1,4 +1,3 @@
-/* LRU Opportunistic Cache. */
 package routing.ccnutil;
 
 import java.util.ArrayList;

@@ -1,6 +1,3 @@
-/*
- * Lightweight CCN Interest packet for The ONE simulator.
- */
 package routing.ccnutil;
 
 import core.DTNHost;
