@@ -2,7 +2,7 @@
 Scenario.name = TEST_%%Group.router%%_%%MovementModel.rngSeed%%_%%Group.msgTtl%%_%%Group.bufferSize%%_%%Consumer.queryDistribution%%
 Scenario.simulateConnections = true
 Scenario.updateInterval = 0.1
-Scenario.endTime = 1000
+Scenario.endTime = 2000
 Scenario.nrofHostGroups = 13
 
 ## Interface-specific settings
@@ -17,7 +17,7 @@ highspeedInterface.transmitRange = 200
 
 ## Group-specific settings
 Group.movementModel = ShortestPathMapBasedMovement
-Group.router = [CCNRouter;SprayAndWaitRouter;FirstContactRouter]
+Group.router = [CCNRouter]
 CCNRouter.nrofCopies = 10
 ## n/2 copy
 CCNRouter.binaryMode = true
@@ -29,7 +29,7 @@ Group.nrofInterfaces = 1
 Group.interface1 = btInterface
 Group.speed = 0.5, 1.5
 #50, 100, 150, 200, 250, 300, 350, 400, 450, 500
-Group.msgTtl = [50;100;150;200;250;300;350]
+Group.msgTtl = [50;100;150;200;250;300]
 
 ## Movement model settings
 #Movement model's pseudo random number generator (default = 0)
@@ -226,8 +226,8 @@ Group14.speed = 0,0
 ## Reports
 
 Report.nrofReports = 2
-Report.report1 = MessageStatsReport
-Report.report2 = CCNApplicationReport
+Report.report1 = CCNApplicationReport
+Report.report2 = MessageStatsReport
 Report.warmup = 0
 Report.reportDir = reports/
 
@@ -254,7 +254,7 @@ Events1.interval = 25,35
 # Message sizes (500kB - 1MB)
 Events1.size = 500k,1M
 # range of message source/destination addresses
-Events1.hosts = 0,110
+Events1.hosts = 0,22
 # Message ID prefix
 Events1.prefix = M
 
