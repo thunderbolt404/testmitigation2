@@ -20,12 +20,12 @@ highspeedInterface.transmitRange = 200
 ## Common group settings
 Group.movementModel = ShortestPathMapBasedMovement
 Group.router = CCNRouter
-Group.bufferSize = [128M;224M;320M;416M]
+Group.bufferSize = 300M
 Group.waitTime = 0, 120
 Group.nrofInterfaces = 1
 Group.interface1 = btInterface
 Group.speed = 0.5, 1.5
-Group.msgTtl = [70;110;150;190;230;260;300]
+Group.msgTtl = 200
 
 ## Routing-layer CCN-DTN settings
 # SPRAY_AND_WAIT,or EPIDEMIC,or PROPHET
@@ -42,7 +42,7 @@ CCNRouter.pitTimeout = 1200
 
 
 ## Movement model settings
-MovementModel.rngSeed = [33;59]
+MovementModel.rngSeed = 17
 MovementModel.worldSize = 4500, 3400
 MovementModel.warmup = 1000
 
