@@ -5,7 +5,7 @@ Scenario.simulateConnections = true
 Scenario.updateInterval = 0.1
 #21600 - 6 hour
 Scenario.endTime = 2000
-Scenario.nrofHostGroups = 14
+Scenario.nrofHostGroups = 15
 
 ## Interface-specific settings
 # Bluetooth
@@ -259,7 +259,7 @@ Group13.interface1 = btInterface
 #Group13.bufferSize = 50M
 Group13.speed = 3,10
 
-# Group14 - Tram relays 
+# Group14 - Tram relays Verifier
 Group14.nrofApplications = 1
 Group14.application1 = Seeder
 Group14.mode = 3
@@ -267,7 +267,7 @@ Group14.cacheCapacity = 500
 Group14.staticCacheCapacity = 0  
 Group14.avaCache = 0,1
 Group14.enablePIT = true
-Group14.nrofHosts = 6
+Group14.nrofHosts = 2
 Group14.groupID = T
 #Group14.bufferSize = 100M
 Group14.movementModel = MapRouteMovement
@@ -278,6 +278,46 @@ Group14.speed = 7,10
 Group14.nrofInterfaces = 2
 Group14.interface1 = btInterface
 Group14.interface2 = highspeedInterface
+
+# Group15 - Tram relays 
+Group15.nrofApplications = 1
+Group15.application1 = Seeder
+Group15.mode = 3
+Group15.cacheCapacity = 500
+Group15.staticCacheCapacity = 0  
+Group15.avaCache = 0,1
+Group15.enablePIT = true
+Group15.nrofHosts = 2
+Group15.groupID = T
+#Group15.bufferSize = 100M
+Group15.movementModel = MapRouteMovement
+Group15.routeFile = data/tram4.wkt
+Group15.routeType = 1
+Group15.waitTime = 10,30
+Group15.speed = 7,10
+Group15.nrofInterfaces = 2
+Group15.interface1 = btInterface
+Group15.interface2 = highspeedInterface
+
+# Group15 - Tram relays 
+Group15.nrofApplications = 1
+Group15.application1 = Seeder
+Group15.mode = 3
+Group15.cacheCapacity = 500
+Group15.staticCacheCapacity = 0  
+Group15.avaCache = 0,1
+Group15.enablePIT = true
+Group15.nrofHosts = 2
+Group15.groupID = T
+#Group15.bufferSize = 100M
+Group15.movementModel = MapRouteMovement
+Group15.routeFile = data/tram3.wkt
+Group15.routeType = 1
+Group15.waitTime = 10,30
+Group15.speed = 7,10
+Group15.nrofInterfaces = 2
+Group15.interface1 = btInterface
+Group15.interface2 = highspeedInterface
 
 ## Reports
 
