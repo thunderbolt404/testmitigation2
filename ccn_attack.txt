@@ -1,0 +1,316 @@
+# CCN-DTN routing-layer configuration
+## Scenario settings
+Scenario.name = TEST_%%Group.router%%_%%MovementModel.rngSeed%%_%%Group.msgTtl%%_%%Group.bufferSize%%_%%Sink.queryDistribution%%
+Scenario.simulateConnections = true
+Scenario.updateInterval = 0.1
+#21600 - 6 hour
+Scenario.endTime = 2000
+Scenario.nrofHostGroups = 14
+
+## Interface-specific settings
+# Bluetooth
+btInterface.type = SimpleBroadcastInterface
+btInterface.transmitSpeed = 250k
+btInterface.transmitRange = 10
+# Wifi
+highspeedInterface.type = SimpleBroadcastInterface
+highspeedInterface.transmitSpeed = 10M
+highspeedInterface.transmitRange = 200
+
+## Common group settings
+Group.movementModel = ShortestPathMapBasedMovement
+Group.router = CCNRouter
+Group.bufferSize = [128M;224M;320M;416M]
+Group.waitTime = 0, 120
+Group.nrofInterfaces = 1
+Group.interface1 = btInterface
+Group.speed = 0.5, 1.5
+Group.msgTtl = [70;110;150;190;230;260;300]
+
+## Routing-layer CCN-DTN settings
+# SPRAY_AND_WAIT,or EPIDEMIC,or PROPHET
+CCNRouter.forwardingMode = SPRAY_AND_WAIT
+CCNRouter.nrofCopies = 10
+CCNRouter.binaryMode = true
+# for prophet (must be > 0)
+CCNRouter.secondsInTimeUnit = 30
+CCNRouter.processedListCapacity = 5000
+CCNRouter.interestSize = 50
+CCNRouter.contentSize = 1024
+# PIT timeout is in simulation seconds
+CCNRouter.pitTimeout = 1200
+
+
+## Movement model settings
+MovementModel.rngSeed = [33;59]
+MovementModel.worldSize = 4500, 3400
+MovementModel.warmup = 1000
+
+## Map settings
+MapBasedMovement.nrofMapFiles = 4
+MapBasedMovement.mapFile1 = data/roads.wkt
+MapBasedMovement.mapFile2 = data/main_roads.wkt
+MapBasedMovement.mapFile3 = data/pedestrian_paths.wkt
+MapBasedMovement.mapFile4 = data/shops.wkt
+
+## Producer Application
+Source.type = CCN_application
+
+Group1.nrofApplications = 1
+Group1.application1 = Source 
+Group1.mode = 2
+Group1.cacheCapacity = 5000
+Group1.staticCacheCapacity = 50
+Group1.staticCacheRange = 1,51
+Group1.seedStaticCache = 36
+Group1.avaCache = 1,1
+Group1.enablePIT = true
+Group1.nrofHosts = 1
+Group1.movementModel = StationaryMovement
+Group1.nodeLocation = 2600,2200
+Group1.groupID = S
+Group1.interface1 = highspeedInterface
+Group1.bufferSize = 1G
+Group1.speed = 0,0
+
+Group2.nrofApplications = 1
+Group2.application1 = Source
+Group2.mode = 2
+Group2.cacheCapacity = 5000
+Group2.staticCacheCapacity = 50
+Group2.staticCacheRange = 51,101
+Group2.seedStaticCache = 36
+Group2.avaCache = 1,1
+Group2.enablePIT = true
+Group2.nrofHosts = 1
+Group2.movementModel = StationaryMovement
+Group2.nodeLocation = 1300, 500
+Group2.groupID = S
+Group2.interface1 = highspeedInterface
+Group2.bufferSize = 1G
+Group2.speed = 0,0
+
+Group3.nrofApplications = 1
+Group3.application1 = Source
+Group3.mode = 2
+Group3.cacheCapacity = 5000
+Group3.staticCacheCapacity = 50
+Group3.staticCacheRange = 101,151
+Group3.seedStaticCache = 36
+Group3.avaCache = 1,1
+Group3.enablePIT = true
+Group3.nrofHosts = 1
+Group3.movementModel = StationaryMovement
+Group3.nodeLocation = 2314,1283
+Group3.groupID = S
+Group3.bufferSize = 1G
+Group3.speed = 0,0
+Group3.interface1 = highspeedInterface
+
+Group4.nrofApplications = 1
+Group4.application1 = Source
+Group4.mode = 2
+Group4.cacheCapacity = 5000
+Group4.staticCacheCapacity = 50
+Group4.staticCacheRange = 151,201
+Group4.seedStaticCache = 36
+Group4.avaCache = 1,1
+Group4.enablePIT = true
+Group4.nrofHosts = 1
+Group4.movementModel = StationaryMovement
+Group4.nodeLocation = 2800,750
+Group4.groupID = S
+Group4.interface1 = highspeedInterface
+Group4.bufferSize = 1G
+Group4.speed = 0,0
+
+## Consumer Application
+Sink.type = CCN_application
+Sink.seedQuery = 12
+Sink.interval = 100
+Sink.numOfMsgToGenerate = 200
+Sink.queryRange = 1,201
+#1 for random, 2 for ZipF 
+Sink.queryDistribution = 2
+
+Group5.nrofApplications = 1
+Group5.application1 = Sink
+Group5.mode = 1
+Group5.cacheCapacity = 5000
+Group5.staticCacheCapacity = 0
+Group5.avaCache = 0,1
+Group5.enablePIT = true
+Group5.nrofHosts = 20
+Group5.groupID = C
+Group5.nrofInterfaces = 1
+Group5.interface1 = btInterface 
+
+Group6.nrofApplications = 1
+Group6.application1 = Sink
+Group6.mode = 1
+Group6.cacheCapacity = 5000
+Group6.staticCacheCapacity = 0
+Group6.avaCache = 0,1
+Group6.enablePIT = true
+Group6.nrofHosts = 10
+Group6.groupID = C
+Group6.nrofInterfaces = 1
+Group6.interface1 = btInterface 
+
+Group7.nrofApplications = 1
+Group7.application1 = Sink
+Group7.mode = 1
+Group7.cacheCapacity = 5000
+Group7.staticCacheCapacity = 0
+Group7.avaCache = 0,1
+Group7.enablePIT = true
+Group7.nrofHosts = 10
+Group7.groupID = C
+Group7.nrofInterfaces = 1
+Group7.interface1 = btInterface 
+
+Group8.nrofApplications = 1
+Group8.application1 = Sink
+Group8.mode = 1
+Group8.cacheCapacity = 5000
+Group8.staticCacheCapacity = 0
+Group8.avaCache = 0,1
+Group8.enablePIT = true
+Group8.nrofHosts = 10
+Group8.groupID = C
+Group8.nrofInterfaces = 1
+Group8.interface1 = btInterface 
+
+## Intermediate relay nodes
+Seeder.type = CCN_application
+
+# Group9 - Pedestrian relays
+Group9.nrofApplications = 1
+Group9.application1 = Seeder
+Group9.mode = 3
+Group9.cacheCapacity = 500
+Group9.staticCacheCapacity = 0
+Group9.avaCache = 0,1
+Group9.enablePIT = true
+Group9.nrofHosts = 13
+Group9.groupID = R
+#Group9.bufferSize = 50M
+Group9.speed = 0.8,1.8
+Group9.nrofInterfaces = 1
+Group9.interface1 = btInterface
+
+# Group10 - Pedestrian relays
+Group10.nrofApplications = 1
+Group10.application1 = Seeder
+Group10.mode = 3
+Group10.cacheCapacity = 500
+Group10.staticCacheCapacity = 0
+Group10.avaCache = 0,1
+Group10.enablePIT = true
+Group10.nrofHosts = 13
+Group10.groupID = R
+#Group10.bufferSize = 50M   
+Group10.speed = 0.8, 1.8
+Group10.nrofInterfaces = 1
+Group10.interface1 = btInterface
+
+# Group11 - Pedestrian relays attacker
+Group11.nrofApplications = 1
+Group11.application1 = Seeder
+Group11.mode = 3
+Group11.cacheCapacity = 500
+Group11.staticCacheCapacity = 0
+Group11.avaCache = 0,1
+Group11.enablePIT = true
+Group11.nrofHosts = 3
+Group11.groupID = PA
+#Group11.bufferSize = 50M   
+Group11.speed = 0.8, 1.8
+Group11.nrofInterfaces = 1
+Group11.interface1 = btInterface
+
+# Group12 - Car relays
+Group12.nrofApplications = 1
+Group12.application1 = Seeder
+Group12.mode = 3
+Group12.cacheCapacity = 500
+Group12.staticCacheCapacity = 0
+Group12.avaCache = 0,1
+Group12.enablePIT = true
+Group12.nrofHosts = 33
+Group12.groupID = V
+Group12.nrofInterfaces = 1
+Group12.interface1 = btInterface
+#Group12.bufferSize = 50M
+Group12.speed = 3,10
+
+# Group13 - Car relays Attacker
+Group13.nrofApplications = 1
+Group13.application1 = Seeder
+Group13.mode = 3
+Group13.cacheCapacity = 500
+Group13.staticCacheCapacity = 0
+Group13.avaCache = 0,1
+Group13.enablePIT = true
+Group13.nrofHosts = 4
+Group13.groupID = CA
+Group13.nrofInterfaces = 1
+Group13.interface1 = btInterface
+#Group13.bufferSize = 50M
+Group13.speed = 3,10
+
+# Group14 - Tram relays 
+Group14.nrofApplications = 1
+Group14.application1 = Seeder
+Group14.mode = 3
+Group14.cacheCapacity = 500
+Group14.staticCacheCapacity = 0  
+Group14.avaCache = 0,1
+Group14.enablePIT = true
+Group14.nrofHosts = 6
+Group14.groupID = T
+#Group14.bufferSize = 100M
+Group14.movementModel = MapRouteMovement
+Group14.routeFile = data/tram3.wkt
+Group14.routeType = 1
+Group14.waitTime = 10,30
+Group14.speed = 7,10
+Group14.nrofInterfaces = 2
+Group14.interface1 = btInterface
+Group14.interface2 = highspeedInterface
+
+## Reports
+
+Report.nrofReports = 2
+Report.report1 = CCNApplicationReport
+Report.report2 = MessageStatsReport
+Report.warmup = 0
+Report.reportDir = reports/
+
+## Optimization settings
+Optimization.cellSizeMult = 5
+Optimization.randomizeUpdateOrder = true
+
+## GUI settings
+GUI.UnderlayImage.fileName = data/helsinki_underlay.png
+GUI.UnderlayImage.offset = 64, 20
+GUI.UnderlayImage.scale = 4.75
+GUI.UnderlayImage.rotate = -0.015
+GUI.EventLogPanel.nrofEvents = 100
+
+// add default settings
+## Message creation parameters
+# How many event generators
+Events.nrof = 0
+# Class of the first event generator
+Events1.class = MessageEventGenerator
+# (following settings are specific for the MessageEventGenerator class)
+# Creation interval in seconds (one new message every 25 to 35 seconds)
+Events1.interval = 25,35
+# Message sizes (500kB - 1MB)
+Events1.size = 500k,1M
+# range of message source/destination addresses
+Events1.hosts = 0,126
+# Message ID prefix
+Events1.prefix = M
+ 
