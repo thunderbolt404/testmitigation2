@@ -5,7 +5,7 @@ Scenario.simulateConnections = true
 Scenario.updateInterval = 0.1
 #21600 - 6 hour
 Scenario.endTime = 2000
-Scenario.nrofHostGroups = 15
+Scenario.nrofHostGroups = 17
 
 ## Interface-specific settings
 # Bluetooth
@@ -319,11 +319,43 @@ Group15.nrofInterfaces = 2
 Group15.interface1 = btInterface
 Group15.interface2 = highspeedInterface
 
+
+
+# Group16 - Pedestrian attacker
+Group16.nrofApplications = 1
+Group16.application1 = Seeder
+Group16.mode = 4
+Group16.cacheCapacity = 500
+Group16.staticCacheCapacity = 0
+Group16.avaCache = 0,1
+Group16.enablePIT = true
+Group16.nrofHosts = 2
+Group16.groupID = PA
+Group16.speed = 0.8,1.8
+Group16.nrofInterfaces = 1
+Group16.interface1 = btInterface
+
+# Group17 - Car attacker
+Group17.nrofApplications = 1
+Group17.application1 = Seeder
+Group17.mode = 4
+Group17.cacheCapacity = 500
+Group17.staticCacheCapacity = 0
+Group17.avaCache = 0,1
+Group17.enablePIT = true
+Group17.nrofHosts = 2
+Group17.groupID = CA
+Group17.speed = 3,10
+Group17.nrofInterfaces = 1
+Group17.interface1 = btInterface
+
+
 ## Reports
 
-Report.nrofReports = 2
+Report.nrofReports = 3
 Report.report1 = CCNApplicationReport
 Report.report2 = MessageStatsReport
+Report.report3 = CCNAttackTrackingReport
 Report.warmup = 0
 Report.reportDir = reports/
 

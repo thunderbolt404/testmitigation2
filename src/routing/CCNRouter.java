@@ -24,7 +24,8 @@ import routing.ccnutil.*;
 import static util.Constants.*;
 
 /**
- * CCN-aware router using Epidemic or Spray-and-Wait or Prophet as the DTN carrier.
+ * CCN-aware router using Epidemic or Spray-and-Wait or Prophet as the DTN
+ * carrier.
  *
  * Processing order for Interests:
  * duplicate nonce -> Static Cache -> Opportunistic Cache -> PIT -> DTN.
@@ -69,6 +70,14 @@ public class CCNRouter extends ActiveRouter {
     public static final int MODE_CONSUMER = 1;
     public static final int MODE_PRODUCER = 2;
     public static final int MODE_INTERMEDIATE = 3;
+    public static final int MODE_ATTACKER = 4;
+
+    /* Stage 1: passive attacker tracking. */
+    private boolean attackerMode;
+
+    private Map<String, List<String>> trackedConsumers;
+    private Map<String, List<String>> trackedProducerCandidates;
+    private Map<String, List<String>> trackingHistory;
 
     private String forwardingMode;
     private int opportunisticCacheCapacity;
@@ -161,7 +170,7 @@ public class CCNRouter extends ActiveRouter {
         secondsInTimeUnit = getIntAny(settings, ccn,
                 new String[] { SECONDS_IN_UNIT_S }, 30);
         beta = PROPHET_DEFAULT_BETA;
-        gamma =  PROPHET_DEFAULT_GAMMA;
+        gamma = PROPHET_DEFAULT_GAMMA;
 
         initializeState();
     }
@@ -210,11 +219,23 @@ public class CCNRouter extends ActiveRouter {
         // PROPHET
         initPreds();
         lastAgeUpdate = 0.0;
+        /* Stage 1 tracking state. */
+        attackerMode = false;
+        trackedConsumers = new HashMap<String, List<String>>();
+        trackedProducerCandidates = new HashMap<String, List<String>>();
+        trackingHistory = new HashMap<String, List<String>>();
     }
 
     @Override
     public void init(DTNHost host, List<MessageListener> listeners) {
         super.init(host, listeners);
+
+        attackerMode = nodeMode == MODE_ATTACKER;
+
+        if (attackerMode) {
+            System.out.println("ATTACKER MODE ENABLED: " + host);
+        }
+
         InitRandomStaticContent();
     }
 
@@ -330,7 +351,7 @@ public class CCNRouter extends ActiveRouter {
         }
 
         InterestPacket outgoing = interest.copyForDestination(destination);
-        //query_ad-20-1000-3 - message id
+        // query_ad-20-1000-3 - message id
         Message message = outgoing.toMessage(getHost(), nextMessageId("query_ad"), interestSize);
         return createNewMessage(message);
     }
@@ -373,11 +394,11 @@ public class CCNRouter extends ActiveRouter {
             throw new IllegalArgumentException("contentName and requestId must not be empty");
         }
 
-//        Content = 42
-//        Source = current consumer
-//        Creation time = current simulation time
-//        Destination = null
-//        Packet ID = unique request ID
+        // Content = 42
+        // Source = current consumer
+        // Creation time = current simulation time
+        // Destination = null
+        // Packet ID = unique request ID
         InterestPacket interest = new InterestPacket(contentName.trim(),
                 getHost(), SimClock.getTime(), null, requestId);
 
@@ -419,7 +440,6 @@ public class CCNRouter extends ActiveRouter {
                 nextMessageId("localRequest"));
     }
 
-
     @Override
     public boolean createNewMessage(Message message) {
         if (MODE_SPRAY_AND_WAIT.equals(forwardingMode)
@@ -430,11 +450,94 @@ public class CCNRouter extends ActiveRouter {
         return super.createNewMessage(message);
     }
 
+    /**
+     * Records locally observed Interest and Data packets.
+     * Tracking does not modify or drop the packet.
+     */
+    private void trackMessage(Message message, DTNHost from) {
+        if (message == null || from == null) {
+            return;
+        }
+
+        String contentName;
+        String packetType;
+        String packetId;
+        String observation;
+
+        if (InterestPacket.isInterest(message)) {
+            InterestPacket interest = InterestPacket.fromMessage(message);
+
+            contentName = interest.getContentName();
+            packetType = InterestPacket.TYPE_INTEREST;
+            packetId = interest.getPacketId();
+
+            DTNHost consumer = interest.getSource();
+
+            if (consumer != null) {
+                List<String> consumers = trackedConsumers.get(contentName);
+
+                if (consumers == null) {
+                    consumers = new ArrayList<String>();
+                    trackedConsumers.put(contentName, consumers);
+                }
+
+                consumers.add(consumer.toString()
+                        + " [previousHop=" + from + "]");
+            }
+
+        } else if (DataPacket.isData(message)) {
+            DataPacket data = DataPacket.fromMessage(message);
+
+            contentName = data.getContentName();
+            packetType = DataPacket.TYPE_DATA;
+            packetId = data.getPacketId();
+
+            DTNHost producer = data.getProducer();
+
+            if (producer != null) {
+                List<String> producers = trackedProducerCandidates.get(contentName);
+
+                if (producers == null) {
+                    producers = new ArrayList<String>();
+                    trackedProducerCandidates.put(contentName, producers);
+                }
+
+                producers.add(producer.toString()
+                        + " [responseSource=" + data.getResponseSource()
+                        + ", previousHop=" + from + "]");
+            }
+
+        } else {
+            return;
+        }
+
+        observation = "time="
+                + String.format("%.1f", SimClock.getTime())
+                + ", type=" + packetType
+                + ", content=" + contentName
+                + ", previousHop=" + from
+                + ", packetID=" + packetId
+                + ", messageID=" + message.getId();
+
+        List<String> history = trackingHistory.get(contentName);
+
+        if (history == null) {
+            history = new ArrayList<String>();
+            trackingHistory.put(contentName, history);
+        }
+
+        history.add(observation);
+    }
+
     @Override
     public Message messageTransferred(String id, DTNHost from) {
         Message message = super.messageTransferred(id, from);
         if (message == null) {
             return null;
+        }
+
+        if (attackerMode) {
+            trackMessage(message, from);
         }
 
         if (MODE_SPRAY_AND_WAIT.equals(forwardingMode)) {
@@ -523,14 +626,15 @@ public class CCNRouter extends ActiveRouter {
             return;
         }
 
-//        if (InterestPacket.isInterest(message)) {
-//            message.updateProperty(COPY_PROPERTY, Integer.valueOf(2));
-//            return;
-//        }
+        // if (InterestPacket.isInterest(message)) {
+        // message.updateProperty(COPY_PROPERTY, Integer.valueOf(2));
+        // return;
+        // }
 
         int copies = ((Integer) raw).intValue();
         int received = binaryMode
-                ? (int) Math.ceil(copies / 2.0) : 1;
+                ? (int) Math.ceil(copies / 2.0)
+                : 1;
         message.updateProperty(COPY_PROPERTY,
                 Integer.valueOf(Math.max(1, received)));
     }
@@ -571,7 +675,7 @@ public class CCNRouter extends ActiveRouter {
     }
 
     /** FIFO bounded state, matching the old 500-entry processed list. */
-    private boolean rememberAndCheckDuplicate( LinkedHashMap<String, Boolean> table, String key) {
+    private boolean rememberAndCheckDuplicate(LinkedHashMap<String, Boolean> table, String key) {
         if (table.containsKey(key)) {
             return true;
         }
@@ -627,7 +731,7 @@ public class CCNRouter extends ActiveRouter {
 
     /** Old random-host seed: seed + 2 * host address. */
     private DTNHost randomHost(DTNHost excludedOne,
-                               DTNHost excludedTwo) {
+            DTNHost excludedTwo) {
         World world = SimScenario.getInstance().getWorld();
         List<DTNHost> hosts = world.getHosts();
         if (hosts == null || hosts.size() <= 1) {
@@ -666,7 +770,7 @@ public class CCNRouter extends ActiveRouter {
 
     private static int normalizeNodeMode(int value) {
         if (value == MODE_CONSUMER || value == MODE_PRODUCER
-                || value == MODE_INTERMEDIATE) {
+                || value == MODE_INTERMEDIATE || value == MODE_ATTACKER) {
             return value;
         }
         return MODE_INTERMEDIATE;
@@ -688,13 +792,10 @@ public class CCNRouter extends ActiveRouter {
                 "Unknown forwardingMode: " + value);
     }
 
-
-
     @Override
     public CCNRouter replicate() {
         return new CCNRouter(this);
     }
-
 
     public PIT getPIT() {
         return pit;
@@ -750,6 +851,7 @@ public class CCNRouter extends ActiveRouter {
     /**
      * Updates delivery predictions for a host.
      * <CODE>P(a,b) = P(a,b)_old + (1 - P(a,b)_old) * P_INIT</CODE>
+     * 
      * @param host The host we just met
      */
     private void updateDeliveryPredFor(DTNHost host) {
@@ -762,14 +864,14 @@ public class CCNRouter extends ActiveRouter {
      * Updates transitive (A->B->C) delivery predictions.
      * <CODE>P(a,c) = P(a,c)_old + (1 - P(a,c)_old) * P(a,b) * P(b,c) * BETA
      * </CODE>
+     * 
      * @param host The B host who we just met
      */
     private void updateTransitivePreds(DTNHost host) {
         CCNRouter otherRouter = (CCNRouter) host.getRouter();
 
         double pForHost = getPredFor(host);
-        Map<DTNHost, Double> otherPreds =
-                otherRouter.getDeliveryPreds();
+        Map<DTNHost, Double> otherPreds = otherRouter.getDeliveryPreds();
 
         for (Map.Entry<DTNHost, Double> entry : otherPreds.entrySet()) {
             if (entry.getKey() == getHost()) {
@@ -779,9 +881,9 @@ public class CCNRouter extends ActiveRouter {
             double pOld = getPredFor(entry.getKey());
             double pNew = pOld
                     + (1.0 - pOld)
-                    * pForHost
-                    * entry.getValue()
-                    * beta;
+                            * pForHost
+                            * entry.getValue()
+                            * beta;
             preds.put(entry.getKey(), pNew);
         }
     }
@@ -789,6 +891,7 @@ public class CCNRouter extends ActiveRouter {
     /**
      * Returns the current prediction (P) value for a host or 0 if entry for
      * the host doesn't exist.
+     * 
      * @param host The host to look the P for
      * @return the current P value
      */
@@ -802,12 +905,12 @@ public class CCNRouter extends ActiveRouter {
      * Ages all entries in the delivery predictions.
      * <CODE>P(a,b) = P(a,b)_old * (GAMMA ^ k)</CODE>, where k is number of
      * time units that have elapsed since the last time the metric was aged.
+     * 
      * @see #SECONDS_IN_UNIT_S
      */
     private void ageDeliveryPreds() {
-        double timeDiff =
-                (SimClock.getTime() - lastAgeUpdate)
-                        / secondsInTimeUnit;
+        double timeDiff = (SimClock.getTime() - lastAgeUpdate)
+                / secondsInTimeUnit;
 
         if (timeDiff <= 0.0) {
             return;
@@ -823,6 +926,7 @@ public class CCNRouter extends ActiveRouter {
 
     /**
      * Returns a map of this router's delivery predictions
+     * 
      * @return a map of this router's delivery predictions
      */
     private Map<DTNHost, Double> getDeliveryPreds() {
@@ -833,11 +937,11 @@ public class CCNRouter extends ActiveRouter {
     /**
      * Tries to send all other messages to all connected hosts ordered by
      * their delivery probability
+     * 
      * @return The return value of {@link #tryMessagesForConnected(List)}
      */
     private Tuple<Message, Connection> tryOtherMessages() {
-        List<Tuple<Message, Connection>> messages =
-                new ArrayList<Tuple<Message, Connection>>();
+        List<Tuple<Message, Connection>> messages = new ArrayList<Tuple<Message, Connection>>();
 
         Collection<Message> msgCollection = getMessageCollection();
 
@@ -859,8 +963,7 @@ public class CCNRouter extends ActiveRouter {
                     continue;
                 }
 
-                if (otherRouter.getPredFor(destination)
-                        > getPredFor(destination)) {
+                if (otherRouter.getPredFor(destination) > getPredFor(destination)) {
                     messages.add(
                             new Tuple<Message, Connection>(message, con));
                 }
@@ -875,6 +978,18 @@ public class CCNRouter extends ActiveRouter {
         return tryMessagesForConnected(messages);
     }
 
+    public Map<String, List<String>> getTrackedConsumers() {
+        return trackedConsumers;
+    }
+
+    public Map<String, List<String>> getTrackedProducerCandidates() {
+        return trackedProducerCandidates;
+    }
+
+    public Map<String, List<String>> getTrackingHistory() {
+        return trackingHistory;
+    }
+
     /**
      * Comparator for Message-Connection-Tuples that orders the tuples by
      * their delivery probability by the host on the other side of the
@@ -885,22 +1000,16 @@ public class CCNRouter extends ActiveRouter {
 
         @Override
         public int compare(Tuple<Message, Connection> first,
-                           Tuple<Message, Connection> second) {
+                Tuple<Message, Connection> second) {
 
-            DTNHost firstPeer =
-                    first.getValue().getOtherNode(getHost());
-            DTNHost secondPeer =
-                    second.getValue().getOtherNode(getHost());
+            DTNHost firstPeer = first.getValue().getOtherNode(getHost());
+            DTNHost secondPeer = second.getValue().getOtherNode(getHost());
 
-            CCNRouter firstRouter =
-                    (CCNRouter) firstPeer.getRouter();
-            CCNRouter secondRouter =
-                    (CCNRouter) secondPeer.getRouter();
+            CCNRouter firstRouter = (CCNRouter) firstPeer.getRouter();
+            CCNRouter secondRouter = (CCNRouter) secondPeer.getRouter();
 
-            double p1 =
-                    firstRouter.getPredFor(first.getKey().getTo());
-            double p2 =
-                    secondRouter.getPredFor(second.getKey().getTo());
+            double p1 = firstRouter.getPredFor(first.getKey().getTo());
+            double p2 = secondRouter.getPredFor(second.getKey().getTo());
 
             if (p2 - p1 == 0.0) {
                 return compareByQueueMode(
@@ -912,6 +1021,5 @@ public class CCNRouter extends ActiveRouter {
             }
         }
     }
-
 
 }
